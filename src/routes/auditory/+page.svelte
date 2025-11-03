@@ -22,6 +22,15 @@
 		userFingerprint = await fingerprint();
 	});
 
+	/**
+	 * Resume audio context if suspended (required for browser autoplay policies)
+	 */
+	async function ensureAudioContext() {
+		if (context && context.state === "suspended") {
+			await context.resume();
+		}
+	}
+
 	async function sendTelemetry(reactionTime) {
 		if (userFingerprint == null) return;
 		try {
@@ -56,6 +65,7 @@
 	 */
 	async function pointerDownHandler(event) {
 		event.preventDefault();
+		await ensureAudioContext();
 		box.textContent = "소리가 들리면 손을 때세요";
 		timeoutHandler = setRangedTimeout(1000, 2000, () => {
 			then = performance.now();
