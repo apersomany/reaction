@@ -68,6 +68,14 @@
 							<span class="stat-label">테스트 횟수</span>
 							<span class="stat-value">{statistics.visual.count}</span>
 						</div>
+						{#if statistics.visual.excluded > 0}
+							<div class="stat-item excluded-info">
+								<span class="stat-label">분석에 사용됨</span>
+								<span class="stat-value"
+									>{statistics.visual.filteredCount} <span class="excluded-text">(상위/하위 10% 제외)</span></span
+								>
+							</div>
+						{/if}
 						<div class="stat-item">
 							<span class="stat-label">평균</span>
 							<span class="stat-value highlight">{statistics.visual.mean}ms</span>
@@ -103,6 +111,14 @@
 							<span class="stat-label">테스트 횟수</span>
 							<span class="stat-value">{statistics.auditory.count}</span>
 						</div>
+						{#if statistics.auditory.excluded > 0}
+							<div class="stat-item excluded-info">
+								<span class="stat-label">분석에 사용됨</span>
+								<span class="stat-value"
+									>{statistics.auditory.filteredCount} <span class="excluded-text">(상위/하위 10% 제외)</span></span
+								>
+							</div>
+						{/if}
 						<div class="stat-item">
 							<span class="stat-label">평균</span>
 							<span class="stat-value highlight">{statistics.auditory.mean}ms</span>
@@ -133,7 +149,6 @@
 		<!-- Comparison -->
 		{#if statistics.visual?.count > 0 && statistics.auditory?.count > 0}
 			<div class="comparison">
-				<h2>비교</h2>
 				<div class="comparison-content">
 					<p>
 						{#if statistics.visual.mean < statistics.auditory.mean}
@@ -248,6 +263,11 @@
 		border-radius: 0.5rem;
 	}
 
+	.stat-item.excluded-info {
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+	}
+
 	.stat-label {
 		font-weight: 500;
 		opacity: 0.9;
@@ -256,6 +276,13 @@
 	.stat-value {
 		font-size: 1.25rem;
 		font-weight: 700;
+	}
+
+	.excluded-text {
+		font-size: 0.8rem;
+		font-weight: 400;
+		opacity: 0.7;
+		font-style: italic;
 	}
 
 	.stat-value.highlight {
@@ -285,13 +312,6 @@
 		padding: 2rem;
 		margin-bottom: 2rem;
 		border: 1px solid rgba(255, 255, 255, 0.2);
-	}
-
-	.comparison h2 {
-		margin: 0 0 1rem 0;
-		font-size: 1.5rem;
-		font-weight: 600;
-		text-align: center;
 	}
 
 	.comparison-content {
