@@ -60,7 +60,7 @@
 
 	let then = 0;
 
-	const availableFrequencies = [131, 261, 523];
+	const availableFrequencies = [100, 800, 6400];
 
 	/**
 	 * @param event { Event }

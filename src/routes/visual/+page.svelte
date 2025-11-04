@@ -2,8 +2,8 @@
 	import { isMobile, setRangedTimeout, fingerprint } from "$lib";
 	import { onMount } from "svelte";
 
-	let lightness = 1.0;
-	let chroma = 1.0;
+	let lightness = 0.65;
+	let chroma = 0.20;
 	let hue = 30;
 
 	/**
@@ -43,7 +43,7 @@
 		}
 	}
 
-	const availableHues = [30, 150, 240];
+	const availableHues = [30, 140, 330];
 
 	/**
 	 * @param event { Event }
