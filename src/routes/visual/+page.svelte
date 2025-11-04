@@ -43,7 +43,7 @@
 		}
 	}
 
-	const availableHues = [30, 120, 270];
+	const availableHues = [30, 150, 240];
 
 	/**
 	 * @param event { Event }

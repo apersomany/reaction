@@ -60,11 +60,14 @@
 
 	let then = 0;
 
+	const availableFrequencies = [131, 261, 523];
+
 	/**
 	 * @param event { Event }
 	 */
 	async function pointerDownHandler(event) {
 		event.preventDefault();
+		frequency = availableFrequencies[Math.floor(Math.random() * availableFrequencies.length)];
 		await ensureAudioContext();
 		box.textContent = "소리가 들리면 손을 때세요";
 		timeoutHandler = setRangedTimeout(1000, 2000, () => {
