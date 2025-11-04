@@ -43,11 +43,14 @@
 		}
 	}
 
+	const availableHues = [30, 120, 270];
+
 	/**
 	 * @param event { Event }
 	 */
 	async function pointerDownHandler(event) {
 		event.preventDefault();
+		hue = availableHues[Math.floor(Math.random() * availableHues.length)]
 		box.textContent = "화면의 색이 변하면 손을 때세요";
 		timeoutHandler = setRangedTimeout(1000, 2000, () => {
 			then = performance.now();
