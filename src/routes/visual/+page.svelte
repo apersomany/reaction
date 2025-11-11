@@ -53,7 +53,7 @@
 		event.preventDefault();
 		hue = availableHues[Math.floor(Math.random() * availableHues.length)]
 		box.textContent = "화면의 색이 변하면 손을 때세요";
-		timeoutHandler = setRangedTimeout(1000, 2000, () => {
+		timeoutHandler = setRangedTimeout(1000, 3000, () => {
 			then = performance.now();
 			// Convert OKLCH to RGB for better browser compatibility
 			const bgColor = c(lightness, chroma, hue, 'oklch');

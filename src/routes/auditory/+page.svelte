@@ -74,7 +74,7 @@
 		frequency = availableFrequencies[Math.floor(Math.random() * availableFrequencies.length)];
 		await ensureAudioContext();
 		box.textContent = "소리가 들리면 손을 때세요";
-		timeoutHandler = setRangedTimeout(1000, 2000, () => {
+		timeoutHandler = setRangedTimeout(1000, 3000, () => {
 			then = performance.now();
 			oscillator.connect(context.destination);
 			timeoutHandler = null;
