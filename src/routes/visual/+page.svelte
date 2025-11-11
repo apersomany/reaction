@@ -33,12 +33,12 @@
 		// Create randomized sequence: each color appears REPETITIONS times
 		colorSequence = [];
 		for (let i = 0; i < REPETITIONS; i++) {
+			// Shuffle the sequence
+			for (let j = COLORS.length - 1; j > 0; j--) {
+				const k = Math.floor(Math.random() * (j + 1));
+				[COLORS[j], COLORS[k]] = [COLORS[k], COLORS[j]];
+			}
 			colorSequence.push(...COLORS);
-		}
-		// Shuffle the sequence
-		for (let i = colorSequence.length - 1; i > 0; i--) {
-			const j = Math.floor(Math.random() * (i + 1));
-			[colorSequence[i], colorSequence[j]] = [colorSequence[j], colorSequence[i]];
 		}
 		
 		color = colorSequence[0];

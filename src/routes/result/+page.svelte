@@ -6,34 +6,68 @@
 	let userId = null;
 	let visualData = [];
 	let auditoryData = [];
+	let rankData = null;
 	let loading = true;
 	let error = null;
+	let isSharedView = false;
 
 	onMount(async () => {
-		userId = getUserId();
-		if (!userId) {
-			window.location.replace("/");
-			return;
+		// Check for shared URL parameter first
+		const urlParams = new URLSearchParams(window.location.search);
+		const sharedUserId = urlParams.get("user");
+		
+		if (sharedUserId) {
+			// Viewing someone else's results
+			userId = sharedUserId;
+			isSharedView = true;
+		} else {
+			// Viewing own results
+			userId = getUserId();
+			if (!userId) {
+				window.location.replace("/");
+				return;
+			}
 		}
 
 		try {
-			const response = await fetch(`/api/result?user=${userId}`);
+			const response = await fetch(`/api/result?user=${encodeURIComponent(userId)}`);
 			if (!response.ok) {
-				throw new Error("Failed to fetch results");
+				const errorData = await response.json();
+				throw new Error(errorData.error || "Failed to fetch results");
 			}
 
 			const data = await response.json();
 			visualData = data.visual;
 			auditoryData = data.auditory;
 
-			// Create charts after data is loaded
-			createCharts();
+			// Fetch rank data
+			try {
+				const rankResponse = await fetch(`/api/rank?user=${encodeURIComponent(userId)}`);
+				if (rankResponse.ok) {
+					rankData = await rankResponse.json();
+				}
+			} catch (rankErr) {
+				console.warn("Failed to fetch rank data:", rankErr);
+			}
+
+			// Wait for DOM to render canvases
+			setTimeout(() => createCharts(), 0);
 		} catch (err) {
 			error = err.message;
 		} finally {
 			loading = false;
 		}
 	});
+
+	function shareResults() {
+		const shareUrl = `${window.location.origin}/result?user=${encodeURIComponent(userId)}`;
+		navigator.clipboard.writeText(shareUrl).then(() => {
+			alert("결과 링크가 클립보드에 복사되었습니다!");
+		}).catch(() => {
+			// Fallback: show the URL
+			prompt("결과 공유 링크:", shareUrl);
+		});
+	}
 
 	function createCharts() {
 		// Chart 1: Visual vs Auditory average
@@ -236,9 +270,9 @@
 	}
 </script>
 
-<div style="min-height: 100svh; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+<div style="min-height: 100svh; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
 	<div style="max-width: 1200px; margin: 0 auto;">
-		<h1 style="color: white; text-align: center; margin-bottom: 2rem; font-size: 2rem;">
+		<h1 style="color: white; text-align: center; margin: 0 0 2rem 0; font-size: 2rem;">
 			테스트 결과
 		</h1>
 
@@ -251,10 +285,43 @@
 				오류: {error}
 			</div>
 		{:else}
-			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 2rem;">
+			<!-- Rank Cards -->
+			{#if rankData}
+				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 1rem; margin-bottom: 1rem;">
+					<!-- Visual Rank -->
+					<div style="background: white; border-radius: 1rem; padding: 1.5rem; text-align: center;">
+						<h3 style="margin: 0 0 1rem 0; color: #667eea; font-size: 1.5rem;">시각 반응 순위</h3>
+						<div style="font-size: 3rem; font-weight: bold; color: #667eea; margin: 0.5rem 0;">
+							{Math.round(rankData.visual.mean)}ms
+						</div>
+						<div style="font-size: 1.25rem; color: #666; margin: 0.5rem 0;">
+							상위 {rankData.visual.percentile.toFixed(1)}%
+						</div>
+						<div style="font-size: 1rem; color: #999; margin-top: 0.5rem;">
+							{rankData.visual.better_than.toLocaleString()} / {rankData.visual.total_users.toLocaleString()} 명보다 빠름
+						</div>
+					</div>
+
+					<!-- Auditory Rank -->
+					<div style="background: white; border-radius: 1rem; padding: 1.5rem; text-align: center;">
+						<h3 style="margin: 0 0 1rem 0; color: #764ba2; font-size: 1.5rem;">청각 반응 순위</h3>
+						<div style="font-size: 3rem; font-weight: bold; color: #764ba2; margin: 0.5rem 0;">
+							{Math.round(rankData.auditory.mean)}ms
+						</div>
+						<div style="font-size: 1.25rem; color: #666; margin: 0.5rem 0;">
+							상위 {rankData.auditory.percentile.toFixed(1)}%
+						</div>
+						<div style="font-size: 1rem; color: #999; margin-top: 0.5rem;">
+							{rankData.auditory.better_than.toLocaleString()} / {rankData.auditory.total_users.toLocaleString()} 명보다 빠름
+						</div>
+					</div>
+				</div>
+			{/if}
+
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); gap: 1rem;">
 				<!-- Chart 1: Visual vs Auditory -->
 				<div style="background: white; border-radius: 1rem; padding: 1.5rem;">
-					<h2 style="margin-bottom: 1rem; font-size: 1.25rem;">시각 vs 청각 평균 반응 시간</h2>
+					<h2 style="margin: 0 0 1rem 0; font-size: 1.25rem; text-align: center;">시각 vs 청각 평균 반응 시간</h2>
 					<div style="height: 300px;">
 						<canvas id="comparisonChart"></canvas>
 					</div>
@@ -262,7 +329,7 @@
 
 				<!-- Chart 2: Hue trend -->
 				<div style="background: white; border-radius: 1rem; padding: 1.5rem;">
-					<h2 style="margin-bottom: 1rem; font-size: 1.25rem;">색상별 평균 반응 시간</h2>
+					<h2 style="margin: 0 0 1rem 0; font-size: 1.25rem; text-align: center;">색상별 평균 반응 시간</h2>
 					<div style="height: 300px;">
 						<canvas id="hueChart"></canvas>
 					</div>
@@ -270,7 +337,7 @@
 
 				<!-- Chart 3: Chroma trend -->
 				<div style="background: white; border-radius: 1rem; padding: 1.5rem;">
-					<h2 style="margin-bottom: 1rem; font-size: 1.25rem;">채도별 평균 반응 시간</h2>
+					<h2 style="margin: 0 0 1rem 0; font-size: 1.25rem; text-align: center;">채도별 평균 반응 시간</h2>
 					<div style="height: 300px;">
 						<canvas id="chromaChart"></canvas>
 					</div>
@@ -278,18 +345,25 @@
 
 				<!-- Chart 4: Frequency trend -->
 				<div style="background: white; border-radius: 1rem; padding: 1.5rem;">
-					<h2 style="margin-bottom: 1rem; font-size: 1.25rem;">주파수별 평균 반응 시간</h2>
+					<h2 style="margin: 0 0 1rem 0; font-size: 1.25rem; text-align: center;">주파수별 평균 반응 시간</h2>
 					<div style="height: 300px;">
 						<canvas id="frequencyChart"></canvas>
 					</div>
 				</div>
 			</div>
 
-			<div style="text-align: center; margin-top: 2rem;">
+			<div style="text-align: center; margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+				{#if !isSharedView}
+					<button
+						on:click={shareResults}
+						style="padding: 1rem 1rem; font-size: 1.125rem; border: none; border-radius: 0.5rem; background: white; cursor: pointer; font-weight: bold;">
+						결과 공유하기
+					</button>
+				{/if}
 				<button
 					on:click={() => window.location.replace("/")}
-					style="padding: 1rem 2rem; font-size: 1.125rem; border: none; border-radius: 0.5rem; background: white; cursor: pointer; font-weight: bold;">
-					홈으로 돌아가기
+					style="padding: 1rem 1rem; font-size: 1.125rem; border: none; border-radius: 0.5rem; background: white; cursor: pointer; font-weight: bold;">
+					테스트 다시하기
 				</button>
 			</div>
 		{/if}

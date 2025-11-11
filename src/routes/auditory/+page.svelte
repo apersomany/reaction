@@ -8,11 +8,12 @@
 
 	let context;
 	let oscillator;
+	let gainNode;
 	let box;
 	let timeoutHandler = null;
 	let then = 0;
 	let userId = null;
-	let data = [];
+	let samples = [];
 	let frequency = FREQUENCIES[0];
 	let index = 0;
 	let frequencySequence = [];
@@ -27,19 +28,24 @@
 		// Create randomized sequence: each frequency appears REPETITIONS times
 		frequencySequence = [];
 		for (let i = 0; i < REPETITIONS; i++) {
+			// Shuffle the sequence
+			for (let j = FREQUENCIES.length - 1; j > 0; j--) {
+				const k = Math.floor(Math.random() * (j + 1));
+				[FREQUENCIES[j], FREQUENCIES[k]] = [FREQUENCIES[k], FREQUENCIES[j]];
+			}
 			frequencySequence.push(...FREQUENCIES);
-		}
-		// Shuffle the sequence
-		for (let i = frequencySequence.length - 1; i > 0; i--) {
-			const j = Math.floor(Math.random() * (i + 1));
-			[frequencySequence[i], frequencySequence[j]] = [frequencySequence[j], frequencySequence[i]];
 		}
 		
 		frequency = frequencySequence[0];
 		
 		context = new AudioContext();
+		gainNode = context.createGain();
+		gainNode.gain.value = 0;
+		gainNode.connect(context.destination);
+		
 		oscillator = context.createOscillator();
 		oscillator.frequency.value = frequency;
+		oscillator.connect(gainNode);
 		oscillator.start();
 	});
 
@@ -72,7 +78,7 @@
 		
 		timeoutHandler = setRangedTimeout(1000, 3000, () => {
 			then = performance.now();
-			oscillator.connect(context.destination);
+			gainNode.gain.setTargetAtTime(1, context.currentTime, 0.015);
 			timeoutHandler = null;
 		});
 	}
@@ -86,7 +92,7 @@
 		}
 
 		if (then) {
-			oscillator.disconnect();
+			gainNode.gain.setTargetAtTime(0, context.currentTime, 0.015);
 			box.textContent = `${Math.round(diff)}ms`;
 			
 			if (diff >= MIN_REACTION && diff <= MAX_REACTION) {
