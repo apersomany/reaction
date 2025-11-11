@@ -1,5 +1,5 @@
 <script>
-	import { isMobile, setRangedTimeout, getUserId } from "$lib";
+	import { isMobile, setRangedTimeout, getUserId, MIN_REACTION, MAX_REACTION, REPETITIONS } from "$lib";
 	import { onMount } from "svelte";
 	import c from "chroma-js";
 
@@ -12,34 +12,46 @@
 		{ lightness: 0.625, chroma: 0.15, hue: 30 },
 	];
 
-	const REPETITIONS = 5;
 	const TOTAL_SAMPLES = COLORS.length * REPETITIONS;
-	const MIN_REACTION = 100;
-	const MAX_REACTION = 500;
 
 	let box;
 	let timeoutHandler = null;
 	let then = 0;
 	let userId = null;
-	let samples = [];
+	let data = [];
 	let color = COLORS[0];
 	let index = 0;
+	let colorSequence = [];
 
 	onMount(() => {
 		userId = getUserId();
 		if (!userId) {
 			window.location.replace("/");
+			return;
 		}
+		
+		// Create randomized sequence: each color appears REPETITIONS times
+		colorSequence = [];
+		for (let i = 0; i < REPETITIONS; i++) {
+			colorSequence.push(...COLORS);
+		}
+		// Shuffle the sequence
+		for (let i = colorSequence.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[colorSequence[i], colorSequence[j]] = [colorSequence[j], colorSequence[i]];
+		}
+		
+		color = colorSequence[0];
 	});
 
 	async function sendBatchedTelemetry() {
-		if (!userId || samples.length === 0) return;
+		if (!userId || data.length === 0) return;
 		
 		try {
 			await fetch("/api/visual", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ user: userId, samples }),
+				body: JSON.stringify({ user: userId, samples: data }),
 			});
 		} catch (error) {
 			console.error("Failed to send telemetry:", error);
@@ -48,7 +60,7 @@
 
 	async function pointerDownHandler(event) {
 		event.preventDefault();
-		color = COLORS[index % COLORS.length];
+		color = colorSequence[index];
 		box.textContent = "화면의 색이 변하면 손을 때세요";
 		
 		timeoutHandler = setRangedTimeout(1000, 3000, () => {
@@ -76,7 +88,7 @@
 			box.textContent = `${Math.round(diff)}ms`;
 			
 			if (diff >= MIN_REACTION && diff <= MAX_REACTION) {
-				samples.push({
+				data.push({
 					lightness: color.lightness,
 					chroma: color.chroma,
 					hue: color.hue,

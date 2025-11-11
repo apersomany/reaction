@@ -1,14 +1,10 @@
 <script>
-	import { isMobile, setRangedTimeout, getUserId } from "$lib";
+	import { isMobile, setRangedTimeout, getUserId, MIN_REACTION, MAX_REACTION, REPETITIONS } from "$lib";
 	import { onMount } from "svelte";
 	import c from "chroma-js";
 
 	const FREQUENCIES = [100, 800, 6400];
-	const REPETITIONS = 5;
 	const TOTAL_SAMPLES = FREQUENCIES.length * REPETITIONS;
-	const MIN_REACTION = 100;
-	const MAX_REACTION = 500;
-	const WHITE_COLOR = c(1.0, 0, 0, "oklch").toString();
 
 	let context;
 	let oscillator;
@@ -16,9 +12,10 @@
 	let timeoutHandler = null;
 	let then = 0;
 	let userId = null;
-	let samples = [];
+	let data = [];
 	let frequency = FREQUENCIES[0];
 	let index = 0;
+	let frequencySequence = [];
 
 	onMount(() => {
 		userId = getUserId();
@@ -26,6 +23,19 @@
 			window.location.replace("/");
 			return;
 		}
+		
+		// Create randomized sequence: each frequency appears REPETITIONS times
+		frequencySequence = [];
+		for (let i = 0; i < REPETITIONS; i++) {
+			frequencySequence.push(...FREQUENCIES);
+		}
+		// Shuffle the sequence
+		for (let i = frequencySequence.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[frequencySequence[i], frequencySequence[j]] = [frequencySequence[j], frequencySequence[i]];
+		}
+		
+		frequency = frequencySequence[0];
 		
 		context = new AudioContext();
 		oscillator = context.createOscillator();
@@ -55,7 +65,7 @@
 
 	async function pointerDownHandler(event) {
 		event.preventDefault();
-		frequency = FREQUENCIES[index % FREQUENCIES.length];
+		frequency = frequencySequence[index];
 		oscillator.frequency.value = frequency;
 		await ensureAudioContext();
 		box.textContent = "소리가 들리면 손을 때세요";
@@ -85,8 +95,8 @@
 				
 				if (index === TOTAL_SAMPLES) {
 					await sendBatchedTelemetry();
-					alert("청각 테스트를 완료했습니다.\n확인 시 통계 페이지로 이동합니다.");
-					window.location.replace("/statistics");
+					alert("청각 테스트를 완료했습니다.\n확인 시 결과 페이지로 이동합니다.");
+					window.location.replace("/result");
 				}
 			}
 		} else {
@@ -99,7 +109,7 @@
 
 <div style="width: 100svw; height: 100svh; display: flex;">
 	<div
-		style="flex: 1; margin: 1rem; border-radius: 1rem; background: {WHITE_COLOR}; display: flex; justify-content: center; align-items: center;"
+		style="flex: 1; margin: 1rem; border-radius: 1rem; display: flex; justify-content: center; align-items: center;"
 		on:pointerdown={isMobile > 0 ? null : pointerDownHandler}
 		on:pointerup={isMobile > 0 ? null : pointerUpHandler}
 		on:touchstart={isMobile > 0 ? pointerDownHandler : null}
