@@ -1,6 +1,7 @@
 <script>
 	import { isMobile, setRangedTimeout, fingerprint } from "$lib";
 	import { onMount } from "svelte";
+	import c from "chroma-js";
 
 	let lightness = 0.65;
 	let chroma = 0.20;
@@ -54,8 +55,13 @@
 		box.textContent = "화면의 색이 변하면 손을 때세요";
 		timeoutHandler = setRangedTimeout(1000, 2000, () => {
 			then = performance.now();
-			box.style.background = `oklch(${lightness} ${chroma} ${hue})`;
-			box.style.color = lightness > 0.3 && chroma < 0.3 ? "oklch(0 0 0)" : "oklch(1 0 0)";
+			// Convert OKLCH to RGB for better browser compatibility
+			const bgColor = c(lightness, chroma, hue, 'oklch');
+			const textColor = lightness > 0.3 && chroma < 0.3 
+				? c(0, 0, 0, 'oklch') 
+				: c(1, 0, 0, 'oklch');
+			box.style.background = String(bgColor);
+			box.style.color = String(textColor);
 			box.textContent = "손을 때세요";
 			timeoutHandler = null;
 		});
@@ -69,8 +75,9 @@
 			timeoutHandler = null;
 		}
 		if (then) {
-			box.style.background = "oklch(1 0 0)";
-			box.style.color = "oklch(0 0 0)";
+			// Convert OKLCH to RGB for better browser compatibility
+			box.style.background = String(c(1, 0, 0, 'oklch'));
+			box.style.color = String(c(0, 0, 0, 'oklch'));
 			box.textContent = `${Math.round(diff)}ms`;
 			await sendTelemetry(diff);
 		} else {

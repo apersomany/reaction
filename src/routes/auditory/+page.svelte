@@ -1,6 +1,7 @@
 <script>
 	import { isMobile, setRangedTimeout, fingerprint } from "$lib";
 	import { onMount } from "svelte";
+	import c from "chroma-js";
 
 	/**
 	 * @type { AudioContext }
@@ -13,6 +14,9 @@
 
 	let frequency = 441;
 	let userFingerprint = null;
+
+	// Convert OKLCH to RGB for better browser compatibility
+	const whiteColor = String(c(1.0, 0, 0, 'oklch'));
 
 	onMount(async () => {
 		context = new AudioContext();
@@ -97,7 +101,7 @@
 
 <div style="width: 100svw; height: 100svh; display: flex;">
 	<div
-		style="flex: 1; margin: 1rem; border-radius: 1rem; background: oklch(1.0 0 0); display: flex; justify-content: center; align-items: center;"
+		style="flex: 1; margin: 1rem; border-radius: 1rem; background: {whiteColor}; display: flex; justify-content: center; align-items: center;"
 		on:pointerdown={isMobile > 0 ? null : pointerDownHandler}
 		on:pointerup={isMobile > 0 ? null : pointerUpHandler}
 		on:touchstart={isMobile > 0 ? pointerDownHandler : null}
