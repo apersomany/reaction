@@ -272,7 +272,7 @@
 
 <div style="min-height: 100svh; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
 	<div style="max-width: 1200px; margin: 0 auto;">
-		<h1 style="color: white; text-align: center; margin: 0 0 2rem 0; font-size: 2rem;">
+		<h1 style="color: white; text-align: center; margin: 0 0 1rem 0; font-size: 2rem;">
 			테스트 결과
 		</h1>
 
