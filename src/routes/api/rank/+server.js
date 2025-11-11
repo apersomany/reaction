@@ -162,9 +162,9 @@ export async function GET({ url, platform }) {
 		const visualPercentile = findPercentile(visualResult.mean, stats.visualPercentiles);
 		const auditoryPercentile = findPercentile(auditoryResult.mean, stats.auditoryPercentiles);
 
-		// Calculate "better than" counts
-		const visualBetterThan = Math.round((visualPercentile / 100) * stats.visualCount);
-		const auditoryBetterThan = Math.round((auditoryPercentile / 100) * stats.auditoryCount);
+		// Calculate "better than" counts (inverted because lower percentile = better)
+		const visualBetterThan = Math.round(((100 - visualPercentile) / 100) * stats.visualCount);
+		const auditoryBetterThan = Math.round(((100 - auditoryPercentile) / 100) * stats.auditoryCount);
 
 		return json({
 			visual: {
