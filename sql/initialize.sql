@@ -1,23 +1,32 @@
--- Visual reaction test results
-CREATE TABLE IF NOT EXISTS visual (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user TEXT NOT NULL,
-  time INTEGER NOT NULL,  -- Unix timestamp in milliseconds
-  lightness REAL NOT NULL,
-  chroma REAL NOT NULL,
-  hue REAL NOT NULL,
-  value REAL NOT NULL  -- Reaction time in milliseconds
+DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS visual;
+DROP TABLE IF EXISTS auditory;
+
+CREATE TABLE user (
+  id TEXT PRIMARY KEY,
+  nickname TEXT NOT NULL,
+  age INTEGER NOT NULL,
+  sex TEXT NOT NULL,
+  phone_no TEXT
 );
 
--- Auditory reaction test results
-CREATE TABLE IF NOT EXISTS auditory (
+CREATE TABLE visual (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user TEXT NOT NULL,
   time INTEGER NOT NULL,
-  frequency REAL NOT NULL,
-  value REAL NOT NULL  -- Reaction time in milliseconds
+  mean INTEGER NOT NULL,
+  data TEXT NOT NULL,
+  FOREIGN KEY (user) REFERENCES user(id)
 );
 
--- Indexes for efficient queries
+CREATE TABLE auditory (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user TEXT NOT NULL,
+  time INTEGER NOT NULL,
+  mean INTEGER NOT NULL,
+  data TEXT NOT NULL,
+  FOREIGN KEY (user) REFERENCES user(id)
+);
+
 CREATE INDEX idx_visual_user ON visual(user);
 CREATE INDEX idx_auditory_user ON auditory(user);

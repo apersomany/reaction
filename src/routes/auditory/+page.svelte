@@ -1,79 +1,65 @@
 <script>
-	import { isMobile, setRangedTimeout, fingerprint } from "$lib";
+	import { isMobile, setRangedTimeout, getUserId } from "$lib";
 	import { onMount } from "svelte";
 	import c from "chroma-js";
 
-	/**
-	 * @type { AudioContext }
-	 */
+	const FREQUENCIES = [100, 800, 6400];
+	const REPETITIONS = 5;
+	const TOTAL_SAMPLES = FREQUENCIES.length * REPETITIONS;
+	const MIN_REACTION = 100;
+	const MAX_REACTION = 500;
+	const WHITE_COLOR = c(1.0, 0, 0, "oklch").toString();
+
 	let context;
-	/**
-	 * @type { OscillatorNode }
-	 */
 	let oscillator;
+	let box;
+	let timeoutHandler = null;
+	let then = 0;
+	let userId = null;
+	let samples = [];
+	let frequency = FREQUENCIES[0];
+	let index = 0;
 
-	let frequency = 441;
-	let userFingerprint = null;
-
-	// Convert OKLCH to RGB for better browser compatibility
-	const whiteColor = String(c(1.0, 0, 0, 'oklch'));
-
-	onMount(async () => {
+	onMount(() => {
+		userId = getUserId();
+		if (!userId) {
+			window.location.replace("/");
+			return;
+		}
+		
 		context = new AudioContext();
 		oscillator = context.createOscillator();
 		oscillator.frequency.value = frequency;
 		oscillator.start();
-		userFingerprint = await fingerprint();
 	});
 
-	/**
-	 * Resume audio context if suspended (required for browser autoplay policies)
-	 */
 	async function ensureAudioContext() {
-		if (context && context.state === "suspended") {
+		if (context?.state === "suspended") {
 			await context.resume();
 		}
 	}
 
-	async function sendTelemetry(reactionTime) {
-		if (userFingerprint == null) return;
+	async function sendBatchedTelemetry() {
+		if (!userId || samples.length === 0) return;
+		
 		try {
 			await fetch("/api/auditory", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					user: userFingerprint,
-					frequency,
-					value: reactionTime,
-				}),
+				body: JSON.stringify({ user: userId, samples }),
 			});
 		} catch (error) {
 			console.error("Failed to send telemetry:", error);
 		}
 	}
 
-	/**
-	 * @type { HTMLDivElement }
-	 */
-	let box;
-
-	/**
-	 * @type { number | null }
-	 */
-	let timeoutHandler = null;
-
-	let then = 0;
-
-	const availableFrequencies = [100, 800, 6400];
-
-	/**
-	 * @param event { Event }
-	 */
 	async function pointerDownHandler(event) {
 		event.preventDefault();
-		frequency = availableFrequencies[Math.floor(Math.random() * availableFrequencies.length)];
+		frequency = FREQUENCIES[index % FREQUENCIES.length];
+		oscillator.frequency.value = frequency;
 		await ensureAudioContext();
 		box.textContent = "소리가 들리면 손을 때세요";
+		
 		timeoutHandler = setRangedTimeout(1000, 3000, () => {
 			then = performance.now();
 			oscillator.connect(context.destination);
@@ -82,26 +68,38 @@
 	}
 
 	async function pointerUpHandler() {
-		let diff = performance.now() - then - context.outputLatency * 1000;
-		console.log(diff);
+		const diff = performance.now() - then - context.outputLatency * 1000;
+		
 		if (timeoutHandler) {
 			clearTimeout(timeoutHandler);
 			timeoutHandler = null;
 		}
+
 		if (then) {
 			oscillator.disconnect();
 			box.textContent = `${Math.round(diff)}ms`;
-			await sendTelemetry(diff);
+			
+			if (diff >= MIN_REACTION && diff <= MAX_REACTION) {
+				samples.push({ frequency, value: diff });
+				index++;
+				
+				if (index === TOTAL_SAMPLES) {
+					await sendBatchedTelemetry();
+					alert("청각 테스트를 완료했습니다.\n확인 시 통계 페이지로 이동합니다.");
+					window.location.replace("/statistics");
+				}
+			}
 		} else {
 			box.textContent = "화면을 누른 상태로 기다리세요";
 		}
+		
 		then = 0;
 	}
 </script>
 
 <div style="width: 100svw; height: 100svh; display: flex;">
 	<div
-		style="flex: 1; margin: 1rem; border-radius: 1rem; background: {whiteColor}; display: flex; justify-content: center; align-items: center;"
+		style="flex: 1; margin: 1rem; border-radius: 1rem; background: {WHITE_COLOR}; display: flex; justify-content: center; align-items: center;"
 		on:pointerdown={isMobile > 0 ? null : pointerDownHandler}
 		on:pointerup={isMobile > 0 ? null : pointerUpHandler}
 		on:touchstart={isMobile > 0 ? pointerDownHandler : null}

@@ -11,9 +11,6 @@
 			margin: 0;
 			overflow: hidden;
 			user-select: none;
-			-webkit-user-select: none;
-			-moz-user-select: none;
-			-ms-user-select: none;
 		}
 	</style>
 </svelte:head>

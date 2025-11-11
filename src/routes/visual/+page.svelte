@@ -1,88 +1,99 @@
 <script>
-	import { isMobile, setRangedTimeout, fingerprint } from "$lib";
+	import { isMobile, setRangedTimeout, getUserId } from "$lib";
 	import { onMount } from "svelte";
 	import c from "chroma-js";
 
-	let lightness = 0.65;
-	let chroma = 0.20;
-	let hue = 30;
+	const COLORS = [
+		{ lightness: 0.65, chroma: 0.2, hue: 30 },
+		{ lightness: 0.65, chroma: 0.2, hue: 140 },
+		{ lightness: 0.65, chroma: 0.2, hue: 330 },
+		{ lightness: 0.625, chroma: 0.25, hue: 30 },
+		{ lightness: 0.625, chroma: 0.2, hue: 30 },
+		{ lightness: 0.625, chroma: 0.15, hue: 30 },
+	];
 
-	/**
-	 * @type { HTMLDivElement }
-	 */
+	const REPETITIONS = 5;
+	const TOTAL_SAMPLES = COLORS.length * REPETITIONS;
+	const MIN_REACTION = 100;
+	const MAX_REACTION = 500;
+
 	let box;
-
-	/**
-	 * @type { number | null }
-	 */
 	let timeoutHandler = null;
-
 	let then = 0;
+	let userId = null;
+	let samples = [];
+	let color = COLORS[0];
+	let index = 0;
 
-	let userFingerprint = null;
-
-	onMount(async () => {
-		userFingerprint = await fingerprint();
+	onMount(() => {
+		userId = getUserId();
+		if (!userId) {
+			window.location.replace("/");
+		}
 	});
 
-	async function sendTelemetry(reactionTime) {
-		if (userFingerprint == null) return;
+	async function sendBatchedTelemetry() {
+		if (!userId || samples.length === 0) return;
+		
 		try {
 			await fetch("/api/visual", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					user: userFingerprint,
-					lightness,
-					chroma,
-					hue,
-					value: reactionTime,
-				}),
+				body: JSON.stringify({ user: userId, samples }),
 			});
 		} catch (error) {
 			console.error("Failed to send telemetry:", error);
 		}
 	}
 
-	const availableHues = [30, 140, 330];
-
-	/**
-	 * @param event { Event }
-	 */
 	async function pointerDownHandler(event) {
 		event.preventDefault();
-		hue = availableHues[Math.floor(Math.random() * availableHues.length)]
+		color = COLORS[index % COLORS.length];
 		box.textContent = "화면의 색이 변하면 손을 때세요";
+		
 		timeoutHandler = setRangedTimeout(1000, 3000, () => {
 			then = performance.now();
-			// Convert OKLCH to RGB for better browser compatibility
-			const bgColor = c(lightness, chroma, hue, 'oklch');
-			const textColor = lightness > 0.3 && chroma < 0.3 
-				? c(0, 0, 0, 'oklch') 
-				: c(1, 0, 0, 'oklch');
-			box.style.background = String(bgColor);
-			box.style.color = String(textColor);
+			box.style.background = c(color.lightness, color.chroma, color.hue, "oklch").toString();
+			box.style.color = color.lightness > 0.3 && color.chroma < 0.3
+				? c(0, 0, 0, "oklch").toString()
+				: c(1, 0, 0, "oklch").toString();
 			box.textContent = "손을 때세요";
 			timeoutHandler = null;
 		});
 	}
 
 	async function pointerUpHandler() {
-		let diff = performance.now() - then;
-		console.log(diff);
+		const diff = performance.now() - then;
+		
 		if (timeoutHandler) {
 			clearTimeout(timeoutHandler);
 			timeoutHandler = null;
 		}
+
 		if (then) {
-			// Convert OKLCH to RGB for better browser compatibility
-			box.style.background = String(c(1, 0, 0, 'oklch'));
-			box.style.color = String(c(0, 0, 0, 'oklch'));
+			box.style.background = c(1, 0, 0, "oklch").toString();
+			box.style.color = c(0, 0, 0, "oklch").toString();
 			box.textContent = `${Math.round(diff)}ms`;
-			await sendTelemetry(diff);
+			
+			if (diff >= MIN_REACTION && diff <= MAX_REACTION) {
+				samples.push({
+					lightness: color.lightness,
+					chroma: color.chroma,
+					hue: color.hue,
+					value: diff,
+				});
+				index++;
+				
+				if (index === TOTAL_SAMPLES) {
+					await sendBatchedTelemetry();
+					alert("시각 테스트를 완료했습니다.\n확인 시 청각 테스트로 이동합니다.");
+					window.location.replace("/auditory");
+				}
+			}
 		} else {
 			box.textContent = "화면을 누른 상태로 기다리세요";
 		}
+		
 		then = 0;
 	}
 </script>

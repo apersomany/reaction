@@ -4,6 +4,6 @@ import { defineConfig } from "vite";
 export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
-		allowedHosts: ["hung-attractive-instruments-down.trycloudflare.com"],
+		allowedHosts: ["coming-chem-obtaining-terrorist.trycloudflare.com"],
 	},
 });
