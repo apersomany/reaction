@@ -9,8 +9,8 @@ export async function POST({ request, platform }) {
 		}
 
 		await platform.env.telemetry
-			.prepare("INSERT INTO user (id, nickname, age, sex, phone_no) VALUES (?, ?, ?, ?, ?)")
-			.bind(id, nickname, age, sex, phone)
+			.prepare("INSERT INTO user (id, nickname, user_agent, age, sex, phone_no) VALUES (?, ?, ?, ?, ?, ?)")
+			.bind(id, nickname, request.headers.get('user-agent'), age, sex, phone)
 			.run();
 
 		return json({ success: true, userId: id });

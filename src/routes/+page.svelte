@@ -145,6 +145,8 @@
 		align-items: center;
 		justify-content: center;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		padding: 1rem;
+		box-sizing: border-box;
 	}
 
 	.form-card {
@@ -154,6 +156,7 @@
 		max-width: 440px;
 		width: 100%;
 		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+		box-sizing: border-box;
 	}
 
 	h1 {
@@ -271,10 +274,18 @@
 	}
 
 	@media (max-width: 480px) {
+		.container {
+			padding: 0;
+		}
+
 		.form-card {
 			border-radius: 0;
 			height: 100svh;
 			max-width: 100%;
+			padding: 1.5rem;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
 		}
 
 		h1 {

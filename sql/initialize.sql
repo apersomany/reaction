@@ -1,11 +1,12 @@
-DROP TABLE IF EXISTS user;
 DROP TABLE IF EXISTS visual;
 DROP TABLE IF EXISTS auditory;
 DROP TABLE IF EXISTS statistics;
+DROP TABLE IF EXISTS user;
 
 CREATE TABLE user (
   id TEXT PRIMARY KEY,
   nickname TEXT NOT NULL,
+  user_agent TEXT NOT NULL,
   age INTEGER NOT NULL,
   sex TEXT NOT NULL,
   phone_no TEXT

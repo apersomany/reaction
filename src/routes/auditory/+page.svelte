@@ -3,7 +3,7 @@
 	import { onMount } from "svelte";
 	import c from "chroma-js";
 
-	const FREQUENCIES = [100, 800, 6400];
+	const FREQUENCIES = [400, 1600, 6400];
 	const TOTAL_SAMPLES = FREQUENCIES.length * REPETITIONS;
 
 	let context;
@@ -35,7 +35,7 @@
 			}
 			frequencySequence.push(...FREQUENCIES);
 		}
-		
+
 		frequency = frequencySequence[0];
 		
 		context = new AudioContext();
@@ -74,7 +74,7 @@
 		frequency = frequencySequence[index];
 		oscillator.frequency.value = frequency;
 		await ensureAudioContext();
-		box.textContent = "소리가 들리면 손을 때세요";
+		box.textContent = "소리가 들리면 손을 떼세요";
 		
 		timeoutHandler = setRangedTimeout(1000, 3000, () => {
 			then = performance.now();

@@ -61,7 +61,7 @@
 	async function pointerDownHandler(event) {
 		event.preventDefault();
 		color = colorSequence[index];
-		box.textContent = "화면의 색이 변하면 손을 때세요";
+		box.textContent = "화면의 색이 변하면 손을 떼세요";
 		
 		timeoutHandler = setRangedTimeout(1000, 3000, () => {
 			then = performance.now();
@@ -69,7 +69,7 @@
 			box.style.color = color.lightness > 0.3 && color.chroma < 0.3
 				? c(0, 0, 0, "oklch").toString()
 				: c(1, 0, 0, "oklch").toString();
-			box.textContent = "손을 때세요";
+			box.textContent = "손을 떼세요";
 			timeoutHandler = null;
 		});
 	}
