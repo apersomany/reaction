@@ -1,38 +1,74 @@
-# sv
+# Reaction Time Test (반응속도 테스트)
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+This project is a web application designed to measure and analyze human reaction times to visual and auditory stimuli. It was developed as a **final project** for the **Scientific and Technical Writing (과학기술글쓰기)** course at Sungkyunkwan University (SKKU).
 
-## Creating a project
+## Project Overview
 
-If you're seeing this, you've probably already done this step. Congrats!
+The application conducts two types of reaction time tests:
+1.  **Visual Reaction Test**: Measures how quickly a user responds to a color change on the screen. It varies the Hue and Chroma of the stimulus to analyze if these properties affect reaction time.
+2.  **Auditory Reaction Test**: Measures how quickly a user responds to a sound. It varies the frequency of the sound (400Hz, 1600Hz, 6400Hz) to analyze the effect of pitch on reaction time.
 
-```sh
-# create a new project in the current directory
-npx sv create
+After completing the tests, users are presented with a detailed analysis of their performance, including:
+*   Comparison between visual and auditory reaction times.
+*   Breakdown of reaction times by color properties (Hue, Chroma).
+*   Breakdown of reaction times by sound frequency.
+*   Percentile ranking compared to other users.
 
-# create a new project in my-app
-npx sv create my-app
-```
+## Features
 
-## Developing
+*   **User Demographics**: Collects basic user information (Nickname, Age, Sex) for statistical analysis.
+*   **Interactive Tests**:
+    *   Randomized inter-stimulus intervals to prevent anticipation.
+    *   Randomized sequence of stimulus properties (Color/Frequency).
+    *   Precise timing measurement using `performance.now()`.
+*   **Data Visualization**: Uses `Chart.js` to display interactive graphs of the results.
+*   **Ranking System**: Calculates and displays the user's percentile ranking based on the collected dataset.
+*   **Responsive Design**: Works on both desktop and mobile devices.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Technology Stack
 
-```sh
-npm run dev
+*   **Framework**: [SvelteKit](https://kit.svelte.dev/)
+*   **Language**: JavaScript / TypeScript
+*   **Styling**: CSS (Scoped Svelte styles)
+*   **Charts**: [Chart.js](https://www.chartjs.org/)
+*   **Color Manipulation**: [Chroma.js](https://gka.github.io/chroma.js/)
+*   **Database**: [Cloudflare D1](https://developers.cloudflare.com/d1/) (SQLite)
+*   **Deployment**: [Cloudflare Pages](https://pages.cloudflare.com/)
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+## Installation and Usage
 
-## Building
+To run this project locally, follow these steps:
 
-To create a production version of your app:
+1.  **Clone the repository**
+    ```bash
+    git clone <repository-url>
+    cd reaction
+    ```
 
-```sh
-npm run build
-```
+2.  **Install dependencies**
+    ```bash
+    npm install
+    ```
 
-You can preview the production build with `npm run preview`.
+3.  **Run the development server**
+    ```bash
+    npm run dev
+    ```
+    The application will be available at `http://localhost:5173`.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+4.  **Build for production**
+    ```bash
+    npm run build
+    ```
+
+## Database Schema
+
+The project uses a relational database (SQLite via Cloudflare D1) with the following structure:
+
+*   **`user`**: Stores user demographic information.
+    *   `id`, `nickname`, `age`, `sex`, `phone_no`
+*   **`visual`**: Stores individual visual reaction test results.
+    *   `user` (FK), `time`, `mean`, `data` (JSON details of samples)
+*   **`auditory`**: Stores individual auditory reaction test results.
+    *   `user` (FK), `time`, `mean`, `data` (JSON details of samples)
+*   **`statistics`**: Caches calculated percentiles for ranking.
