@@ -134,6 +134,10 @@
 				{isSubmitting ? "처리 중..." : "테스트 시작"}
 			</button>
 		</form>
+
+		<div class="stats-link">
+			<a href="/statistics">전체 통계 보기</a>
+		</div>
 	</div>
 </div>
 
@@ -271,6 +275,22 @@
 		opacity: 0.65;
 		cursor: not-allowed;
 		transform: none;
+	}
+
+	.stats-link {
+		margin-top: 1.5rem;
+		text-align: center;
+	}
+
+	.stats-link a {
+		color: #667eea;
+		text-decoration: none;
+		font-size: 0.9rem;
+		font-weight: 600;
+	}
+
+	.stats-link a:hover {
+		text-decoration: underline;
 	}
 
 	@media (max-width: 480px) {

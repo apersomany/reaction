@@ -1,0 +1,10 @@
+Analysis Type,Condition,Mean (ms),StdDev (ms)
+Hue,30,219.02,52.63
+Hue,140,220.39,56.48
+Hue,330,220.29,48.55
+Chroma,0.15,220.48,54.86
+Chroma,0.2,215.26,47.34
+Chroma,0.25,218.33,53.11
+Frequency,400,215.89,68.57
+Frequency,1600,199.85,59.43
+Frequency,6400,208.52,70.28
